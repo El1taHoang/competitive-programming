@@ -33,7 +33,7 @@ augroup numbertoggle
     autocmd BufLeave,FocusLost,InsertEnter * set norelativenumber
 augroup END
 
-" A list of convenient vim macros written by me. To enter special characters like escape, hit Ctrl-V and enter the special character in insert mode
+" A list of convenient vim macros written by Aaron He (me). To enter special characters like escape, hit Ctrl-V and enter the special character in insert mode
 let @t = '7ggoint t;cin >> t;while (t--) {ddk$'
 let @a = 'oint n;cin >> n;vector<int> a(n);for (int i = 0; i < n; i++) {cin >> a[i];j'
 let @f = 'ofor (int i = 0; i < n; i++) {ddk$'
