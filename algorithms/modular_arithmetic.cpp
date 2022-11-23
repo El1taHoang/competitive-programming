@@ -21,20 +21,33 @@ Notes:
 	- Binomial coefficients and factorials are also defined
 	- Negative powers are now supported
 	- Factorial will cache all results until it needs to compute more
+
+Updates:
+	22 November 2022:
+		- Benchmarked on "1761D - Carry Bit" from Codeforces
+		- Speed improvements:
+			* Negative mods calculated using only one mod now (50% faster)
+			* Inverse factorials are precomputed now (30% faster)
+		- Memory improvements:
+			* Values are stored as ints and converted to long longs during multiplication (50% less memory, 10% slower)
+		- Note: still about 40% slower and 50% more memory than previous template (which makes sense because the previous template was more bare-bones)
+		- Mint values now initialized to 0
+		- Division by 0 is no longer forbidden and is defined to be 0 (subject to change)
 */
 
 #include <iostream>
 #include <cassert>
 #include <vector>
-
+ 
 class Mint {
 	private:
-	long long val;
+	int val = 0;
 	// Choose mod then hit Ctrl-o
 	//static const int mod = 1e9 + 7;
 	//static const int mod = 998244353;
 	int normalize(long long x) {
-		return (x % mod + mod) % mod;
+		int res = x % mod;
+		return res + (res < 0 ? mod : 0);
 	}
 	public:
 	Mint() {}
@@ -136,11 +149,10 @@ Mint operator-(const Mint &a, const Mint &b) {
 	return result;
 }
 Mint operator*(const Mint &a, const Mint &b) {
-	Mint result = a.val * b.val;
+	Mint result = (long long) a.val * (long long) b.val;
 	return result;
 }
 Mint operator/(const Mint &a, const Mint &b) {
-	assert(b != 0);
 	Mint result = a.val * Mint(b.val).pow(-1);
 	return result;
 }
@@ -162,29 +174,40 @@ bool operator>(const Mint &a, const Mint &b) {
 bool operator>=(const Mint &a, const Mint &b) {
 	return a.val >= b.val;
 }
-
-std::vector<Mint> fact_arr;
-Mint factorial(int n) {
+ 
+Mint pow(Mint a, long long b) {
+	return a.pow(b);
+}
+ 
+std::vector<Mint> fact_arr(1, 1);
+std::vector<Mint> ifact_arr(1, 1);
+Mint fact(int n) {
 	assert(n >= 0);
-	if (!fact_arr.size()) {
-		fact_arr.push_back(1);
-	}
 	while ((int)fact_arr.size() <= n) {
 		fact_arr.push_back(fact_arr.back() * (Mint)fact_arr.size());
+		ifact_arr.push_back(ifact_arr.back()/(Mint)ifact_arr.size());
 	}
 	return fact_arr[n];
 }
-
-Mint choose(int n, int k) {
-	if (k < 0 || k > n) {
-		return 0;
+Mint ifact(int n) {
+	assert(n >= 0);
+	while ((int)ifact_arr.size() <= n) {
+		fact_arr.push_back(fact_arr.back() * (Mint)fact_arr.size());
+		ifact_arr.push_back(ifact_arr.back()/(Mint)ifact_arr.size());
 	}
-	return factorial(n)/factorial(k)/factorial(n - k);
+	return ifact_arr[n];
 }
-
-Mint permute(int n, int k) {
+ 
+Mint nck(int n, int k) {
 	if (k < 0 || k > n) {
 		return 0;
 	}
-	return factorial(n)/factorial(n - k);
+	return fact(n) * ifact(k) * ifact(n - k);
+}
+ 
+Mint npk(int n, int k) {
+	if (k < 0 || k > n) {
+		return 0;
+	}
+	return fact(n) * ifact(n - k);
 }
