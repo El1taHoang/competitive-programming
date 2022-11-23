@@ -1,77 +1,190 @@
-// Author: Aaron He
-//const int MOD = 1e9 + 7;
-//const int MOD = 998244353;
-const int mxN = 0;
+/*
+Author: Aaron He
+Created: 22 November 2022 (Tuesday)
 
-int add(int a, int b) {
-	return ((1LL * a + b) % MOD + MOD) % MOD;
-}
+Learning to write a modular int class:
+	- Inspiration from tourist's code
+	- Videos from The Cherno:
+		1. CLASSES in C++
+		2. OPERATORS and OPERATOR OVERLOADING in C++
+		3. Copying and Copy Constructors in C++
 
-template <typename Head, typename... Tail>
-int add(Head h, Tail... t) {
-	return add(h, add(t...));
-}
+Notes:
+	- Constructor automatically casts ints and long longs
+	- Explicit casting is defined for ints
+	- Only works for prime moduli when using division (using Fermat's little theorem)
+	- Values should always be between 0 and mod - 1, excluding intermediate steps
+	- Supported unary operations: -, ++, --, ++ (postfix), -- (postfix) 
+	- Supported binary operations (format: Mint/int operator Mint/int): +, -, *, /, ==, !=, <, <=, >, >=
+	- Supported binary operations (format: Mint operator Mint/int): +=, -=, *=, /=, .pow
+	- Supported binary operations (format: stream operator Mint): >>, <<
+	- Binomial coefficients and factorials are also defined
+	- Negative powers are now supported
+	- Factorial will cache all results until it needs to compute more
+*/
 
-int sub(int a, int b) {
-	return add(a, -b);
-}
+#include <iostream>
+#include <cassert>
+#include <vector>
 
-int mult(int a, int b) {
-	return 1LL * a * b % MOD;
-}
-
-template <typename Head, typename... Tail>
-int mult(Head h, Tail... t) {
-	return mult(h, mult(t...));
-}
-
-int pow(int b, int p) {
-	int res = 1;
-	while (p) {
-		if (p & 1) {
-			res = mult(res, b);
+class Mint {
+	private:
+	long long val;
+	// Choose mod then hit Ctrl-o
+	//static const int mod = 1e9 + 7;
+	//static const int mod = 998244353;
+	int normalize(long long x) {
+		return (x % mod + mod) % mod;
+	}
+	public:
+	Mint() {}
+	Mint(long long val) {
+		(*this).val = normalize(val);
+	}
+	Mint pow(long long pow) {
+		Mint base = val;
+		if (pow < 0) {
+			Mint inv_base = base.pow(mod - 2);
+			return inv_base.pow(-pow);
 		}
-		p /= 2;
-		b = mult(b, b);
+		Mint res = 1;
+		while (pow) {
+			if (pow % 2) {
+				res *= base;
+			}
+			base *= base;
+			pow /= 2;
+		}
+		return res;
 	}
-	return res;
-}
-
-int inv(int x) {
-	return pow(x, MOD - 2);
-}
-
-int divide(int a, int b) {
-	return mult(a, inv(b));
-}
-
-int fact_arr[mxN + 1] = {}, ifact_arr[mxN + 1] = {};
-
-void init() {
-	ifact_arr[0] = fact_arr[0] = 1;
-	for (int i = 1; i <= mxN; i++) {
-		ifact_arr[i] = mult(ifact_arr[i - 1], inv(i));
-		fact_arr[i] = mult(fact_arr[i - 1], i);
+	explicit operator int() const {
+		return val;
 	}
+	Mint operator-() {
+		Mint result = -val;
+		return result;
+	}
+	friend Mint operator+(const Mint &a, const Mint &b);
+	friend Mint operator-(const Mint &a, const Mint &b);
+	friend Mint operator*(const Mint &a, const Mint &b);
+	friend Mint operator/(const Mint &a, const Mint &b);
+	Mint operator+=(const Mint &other) {
+		*this = *this + other;
+		return *this + other;
+	}
+	Mint operator-=(const Mint &other) {
+		*this = *this - other;
+		return *this - other;
+	}
+	Mint operator*=(const Mint &other) {
+		*this = *this * other;
+		return *this * other;
+	}
+	Mint operator/=(const Mint &other) {
+		*this = *this/other;
+		return *this/other;
+	}
+	Mint operator++() {
+		val = normalize(val + 1);
+		Mint result = val;
+		return result;
+	}
+	Mint operator--() {
+		val = normalize(val - 1);
+		Mint result = val;
+		return result;
+	}
+	Mint operator++(int) {
+		Mint result = val;
+		val = normalize(val + 1);
+		return result;
+	}
+	Mint operator--(int) {
+		Mint result = val;
+		val = normalize(val - 1);
+		return result;
+	}
+	friend std::string to_string(Mint mint);
+	friend bool operator==(const Mint &a, const Mint &b);
+	friend bool operator!=(const Mint &a, const Mint &b);
+	friend bool operator<(const Mint &a, const Mint &b);
+	friend bool operator<=(const Mint &a, const Mint &b);
+	friend bool operator>(const Mint &a, const Mint &b);
+	friend bool operator>=(const Mint &a, const Mint &b);
+	friend std::ostream& operator<<(std::ostream& stream, const Mint& mint);
+	friend std::istream& operator>>(std::istream& stream, const Mint& mint);
+};
+std::string to_string(Mint mint) {
+	return to_string(mint.val);
+}
+std::ostream& operator<<(std::ostream& stream, const Mint& mint) {
+	stream << mint.val;
+	return stream;
+}
+std::istream& operator>>(std::istream& stream, Mint& mint) {
+	int val;
+	stream >> val;
+	mint = val;
+	return stream;
+}
+Mint operator+(const Mint &a, const Mint &b) {
+	Mint result = a.val + b.val;
+	return result;
+}
+Mint operator-(const Mint &a, const Mint &b) {
+	Mint result = a.val - b.val;
+	return result;
+}
+Mint operator*(const Mint &a, const Mint &b) {
+	Mint result = a.val * b.val;
+	return result;
+}
+Mint operator/(const Mint &a, const Mint &b) {
+	assert(b != 0);
+	Mint result = a.val * Mint(b.val).pow(-1);
+	return result;
+}
+bool operator==(const Mint &a, const Mint &b) {
+	return a.val == b.val;
+}
+bool operator!=(const Mint &a, const Mint &b) {
+	return a.val != b.val;
+}
+bool operator<(const Mint &a, const Mint &b) {
+	return a.val < b.val;
+}
+bool operator<=(const Mint &a, const Mint &b) {
+	return a.val <= b.val;
+}
+bool operator>(const Mint &a, const Mint &b) {
+	return a.val > b.val;
+}
+bool operator>=(const Mint &a, const Mint &b) {
+	return a.val >= b.val;
 }
 
-int fact(int n) {
-	if (fact_arr[0] == 0) {
-		init();
+std::vector<Mint> fact_arr;
+Mint factorial(int n) {
+	assert(n >= 0);
+	if (!fact_arr.size()) {
+		fact_arr.push_back(1);
+	}
+	while ((int)fact_arr.size() <= n) {
+		fact_arr.push_back(fact_arr.back() * (Mint)fact_arr.size());
 	}
 	return fact_arr[n];
 }
 
-int ifact(int n) {
-	if (ifact_arr[0] == 0) {
-		init();
-	}
-	return ifact_arr[n];
-}
-
-int nck(int n, int k) {
-	if (k > n) {
+Mint choose(int n, int k) {
+	if (k < 0 || k > n) {
 		return 0;
 	}
-	return mult(fact(n), mult(ifact(k), ifact(n - k)));
+	return factorial(n)/factorial(k)/factorial(n - k);
+}
+
+Mint permute(int n, int k) {
+	if (k < 0 || k > n) {
+		return 0;
+	}
+	return factorial(n)/factorial(n - k);
 }
