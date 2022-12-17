@@ -1,0 +1,154 @@
+// Author: Aaron He
+// Created: 16 December 2022 (Friday)
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <cassert>
+#include <climits>
+using namespace std;
+
+template <typename T>
+class SegmentTree {
+	private:
+	int size;
+	vector<T> tree;
+	const T identity = 0;
+	T func(T a, T b) {
+		return a + b;
+	}
+	template <typename U>
+	T construct_leaf(U v) {
+		return v;
+	}
+	struct Node {
+		int i, l, r;
+		Node left() {
+			return {2 * i + 1, l, (l + r)/2};
+		}
+		Node right() {
+			return {2 * i + 2, (l + r)/2, r};
+		}
+		int length() {
+			return r - l;
+		}
+		bool contains(int i) {
+			return l <= i && i < r;
+		}
+		bool is_contained(int lb, int rb) {
+			return lb <= l && r <= rb;
+		}
+		bool is_outside(int lb, int rb) {
+			return r <= lb || rb <= l;
+		}
+	};
+	void unite(Node n) {
+		tree[n.i] = func(tree[n.left().i], tree[n.right().i]);
+	}
+	Node root() {
+		return {0, 0, size};
+	}
+	public:
+	SegmentTree(int size) {
+		int p2 = 1;
+		while (p2 < size) {
+			p2 *= 2;
+		}
+		this->size = p2;
+		tree.resize(2 * p2 - 1, identity);
+	}
+	template <typename U>
+	void build(vector<U> &a, Node n) {
+		if (n.length() == 1) {
+			if (n.l < a.size()) {
+				tree[n.i] = construct_leaf(a[n.l]);
+			}
+			return;
+		}
+		build(a, n.left());
+		build(a, n.right());
+		unite(n);
+	}
+	template <typename U>
+	void build(vector<U> &a) {
+		assert(a.size() <= size);
+		build(a, root());
+	}
+	template <typename U>
+	void set(int i, U v, Node n) {
+		if (n.length() == 1) {
+			tree[n.i] = construct_leaf(v);
+			return;
+		}
+		if (n.left().contains(i)) {
+			set(i, v, n.left());
+		} else {
+			set(i, v, n.right());
+		}
+		unite(n);
+	}
+	template <typename U>
+	void set(int i, U v) {
+		assert(i >= 0 && i < size);
+		set(i, v, root());
+	}
+	template <typename U>
+	void add(int i, U v, Node n) {
+		if (n.length() == 1) {
+			tree[n.i] = func(tree[n.i], v);
+			return;
+		}
+		if (n.left().contains(i)) {
+			add(i, v, n.left());
+		} else {
+			add(i, v, n.right());
+		}
+		unite(n);
+	}
+	template <typename U>
+	void add(int i, U v) {
+		assert(i >= 0 && i < size);
+		add(i, v, root());
+	}
+	T get(int l, int r, Node n) {
+		if (n.is_outside(l, r)) {
+			return identity;
+		}
+		if (n.is_contained(l, r)) {
+			return tree[n.i];
+		}
+		return func(get(l, r, n.left()), get(l, r, n.right()));
+	}
+	T get(int l, int r) {
+		assert(l >= 0 && r <= size);
+		return get(l, r, root());
+	}
+};
+
+int main() {
+	ios_base::sync_with_stdio(0);
+	cin.tie(0);
+	int n, m;
+	cin >> n >> m;
+	vector<long long> d(n + 1);
+	/* How the difference array is defined:
+	for (int i = 0; i < n; i++) {
+		d[i] = a[i] - (i ? a[i - 1] : 0);
+	}
+	*/
+	SegmentTree<long long> st(n + 1);
+	st.build(d);
+	while (m--) {
+		int type;
+		cin >> type;
+		if (type == 1) {
+			int l, r, v;
+			cin >> l >> r >> v;
+			st.add(l, v);
+			st.add(r, -v);
+		} else {
+			int i;
+			cin >> i;
+			cout << st.get(0, i + 1) << '\n';;
+		}
+	}
+}

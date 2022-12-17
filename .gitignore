@@ -1,3 +1,7 @@
 *.exe
 *.swp
 input.txt
+*.in
+*.out
+*.txt
+else*.cpp
