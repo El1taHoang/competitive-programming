@@ -40,11 +40,11 @@ Updates:
 #include <vector>
  
 class Mint {
-	private:
-	int val = 0;
-	// Choose mod then hit Ctrl-o
+	public:
 	//static const int mod = 1e9 + 7;
 	//static const int mod = 998244353;
+	private:
+	int val = 0;
 	int normalize(long long x) {
 		int res = x % mod;
 		return res + (res < 0 ? mod : 0);
@@ -179,22 +179,27 @@ Mint pow(Mint a, long long b) {
 	return a.pow(b);
 }
  
-std::vector<Mint> fact_arr(1, 1);
-std::vector<Mint> ifact_arr(1, 1);
-Mint fact(int n) {
-	assert(n >= 0);
+std::vector<Mint> fact_arr;
+std::vector<Mint> ifact_arr;
+
+void update_factorial_arrays(int n) {
 	while ((int)fact_arr.size() <= n) {
+		if (fact_arr.empty()) {
+			fact_arr.push_back(1);
+			ifact_arr.push_back(1);
+		}
 		fact_arr.push_back(fact_arr.back() * (Mint)fact_arr.size());
 		ifact_arr.push_back(ifact_arr.back()/(Mint)ifact_arr.size());
 	}
+}
+Mint fact(int n) {
+	assert(n >= 0);
+	update_factorial_arrays(n);
 	return fact_arr[n];
 }
 Mint ifact(int n) {
 	assert(n >= 0);
-	while ((int)ifact_arr.size() <= n) {
-		fact_arr.push_back(fact_arr.back() * (Mint)fact_arr.size());
-		ifact_arr.push_back(ifact_arr.back()/(Mint)ifact_arr.size());
-	}
+	update_factorial_arrays(n);
 	return ifact_arr[n];
 }
  
